@@ -1,0 +1,53 @@
+doctype html
+html(lang="en")
+    head
+        title #{title}
+        meta(charset='utf-8')
+        include templates/head.pug
+    body
+        include templates/header.pug
+        aside
+            include templates/return_home
+        main(id="create-edit-main")
+            h1 #{title}
+            form(action=`/birds/${editOrCreate}?=${index}`, method="POST" id="bird-detail-form")
+                fieldset(class="bird-detail-fieldset")
+                    h2 Common Names
+                    label(for="primary-name") Primary Name
+                    input(id="primary-name" type="text" value=bird.primary_name name="primaryName")
+                    label(for="english-name") English Name
+                    input(id="english-name" type="text" value=bird.english_name name="englishName")
+                    // TODO bellow, change to a text box, not input, one other name per line
+                    label(for="other-names") Other Names
+                    // TODO, add other names
+                    input(id="other-names" type="text" name="otherNames")
+                fieldset(class="bird-detail-fieldset")
+                    h2 Taxonomy
+                    label(for="scientific-name") Scientific Name
+                    input(id="scientific-name", type ="text" value=bird.scientific_name name='sciName')
+                    label(for="order") Order
+                    input(id="order", type ="text" value=bird.order name="order")
+                    label(for="family") Family
+                    input(id="family", type ="text" value=bird.family name="family")
+                fieldset(class="bird-detail-fieldset")
+                    h2 Size
+                    label(for="length") Length (cm)
+                    input(id="length", type ="number" value=bird.size.length.value name="length")
+                    label(for="weight") Weight (g)
+                    input(id="weight", type ="number" value=bird.size.weight.value name="weight")
+                fieldset(class="bird-detail-fieldset")
+                    h2 Conservation
+                    label(for="cons-status") Conservation Status
+                    input(id="cons-status", type ="text" value=bird.status name="consStatus")
+                fieldset(class="bird-detail-fieldset")
+                    h2 Photo Credit
+                    label(for="photo-credit") Photo Credit
+                    input(id="photo-credit", type="text" value=bird.photo.credit name="photoCredit")
+                    // TODO how to get method bellow??
+                    // TODO add photo input
+                    label(for="file") File
+                    input(id="file" type="file" name="file" value=bird.photo.source)
+                    // TODO fix photo input
+                    img(src= alt='bird-photo')
+                button(type = "submit") Finish
+        include templates/footer.pug

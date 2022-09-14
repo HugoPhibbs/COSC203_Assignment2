@@ -26,3 +26,8 @@ section(class='card')
             li
                 b Weight 
                 span=`${bird.size.weight.value} ${bird.size.weight.units}`
+            if birdDisplay === "unique"
+                include delete_bird_button
+                include edit_bird_button
+            else
+                include view_bird_button

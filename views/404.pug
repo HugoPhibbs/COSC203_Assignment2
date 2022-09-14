@@ -1,0 +1,17 @@
+doctype html
+html(lang='en')
+    head
+        title COSC203: Birds of Aotearoa 404
+        meta(charset='utf-8')
+        meta(name='viewport', content='width=device-width, initial-scale=1')
+        link(rel='stylesheet', href='/styles/layout.css')
+        link(rel='stylesheet', href='/styles/theme.css')
+        link(rel='stylesheet', href='/styles/conservation-status.css')
+        link(rel='stylesheet', href='/styles/cards.css')
+    body#404Body
+        include templates/header.pug
+        aside
+            include templates/return_home
+        main
+            h1 404: Uh oh how did you get here?
+        include templates/footer.pug

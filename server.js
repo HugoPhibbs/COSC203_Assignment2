@@ -1,20 +1,42 @@
 const dotenv = require('dotenv')
 const path = require('path');
+const bodyParser = require("body-parser")
 const express = require('express');
 const bird_router = require('./routers/bird_router');
 const image_router = require('./routers/image_router');
-
 /* load .env */
 dotenv.config();
 
+/* Connecting to a database */
+const mongoose = require("mongoose");
+// const Bird = require("./models/bird");
+const user = process.env.ATLAS_USER
+const password = process.env.ATLAS_PASSWORD;
+const dbName = "assignment2";
+const dbUrl = `mongodb+srv://${user}:${password}@birds.ec79wsv.mongodb.net/${dbName}?retryWrites=true&w=majority`;
+
+const options = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+}
+
+mongoose.connect(dbUrl, options).then(() => {
+    console.log('successfully connected to db!')
+}).catch((e) => {
+    console.error(e, 'could not connect not db!')
+});
+
+/* setup Express middleware */
 /* create Express app */
 const app = express();
 
-/* setup Express middleware */
 // Pug for SSR (static site rendering)
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
-// TODO: middleware for parsing POST body
+
+// Middleware for POSTs
+app.use(bodyParser.urlencoded({encoded: false}))
+
 // TODO: middleware for uploading files
 
 /* host static resources (.css, .js, ...) */
@@ -28,12 +50,14 @@ app.get('/', (req, res) => {
 
 app.use('/birds/', bird_router);
 
-// TODO: 404 page
-
-// TODO: connect to a database
+/* 404 Page*/
+app.get("*", (req, res) => {
+    res.render('404')
+})
 
 /* start the server */
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
     console.log(`Server is live http://localhost:${PORT}`);
 });
+

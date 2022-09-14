@@ -8,7 +8,7 @@ const router = express.Router();
 /* Routes image URLs */
 router.get('/:filename?', (req, res) => {
     const filename = req.params.filename;
-    var image_path = path.resolve(__dirname, `../public/images/${filename}`);
+    let image_path = path.resolve(__dirname, `../public/images/${filename}`);
 
     // if image doesn't exist, use a default image
     if (!fs.existsSync(image_path)) {

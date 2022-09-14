@@ -4,6 +4,7 @@
     --header-height: 100px;
     --footer-height: 50px;
 }
+
 /* grid layout */
 body {
     display: grid;
@@ -12,6 +13,7 @@ body {
     min-height: 100vh;
     margin: 0;
 }
+
 header {
     grid-column: span 2;
     height: var(--header-height);
@@ -19,6 +21,11 @@ header {
 footer {
     grid-column: span 2;
     height: var(--footer-height);
+}
+
+/* 404 layout */
+#404Body {
+    display: flow;
 }
 
 /* Small screens (phones) */
@@ -61,6 +68,24 @@ aside {
     flex-flow: column;
     align-items: stretch;
     flex-basis: var(--aside-width);
+}
+
+#create-edit-main {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: 0;
+}
+
+#bird-detail-form {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: 20px
+}
+
+.bird-detail-fieldset {
+    display: flex;
+    flex-flow: column nowrap;
+    padding: 10px;
 }
 
 /* make sure everything is within the window */

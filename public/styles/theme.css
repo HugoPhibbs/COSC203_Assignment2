@@ -79,3 +79,8 @@ button:hover {
 button:active {
     background: var(--theme-primary-dark);
 }
+
+.bird-detail-fieldset {
+    border-radius: 5px;
+    border: var(--theme-primary-dark) 2px solidw;
+}

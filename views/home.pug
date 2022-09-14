@@ -2,19 +2,15 @@ doctype html
 html(lang='en')
     head
         title COSC203: Birds of Aotearoa
-        meta(charset='utf-8')
-        meta(name='viewport', content='width=device-width, initial-scale=1')
-        link(rel='stylesheet', href='/styles/layout.css')
-        link(rel='stylesheet', href='/styles/theme.css')
-        link(rel='stylesheet', href='/styles/conservation-status.css')
-        link(rel='stylesheet', href='/styles/cards.css')
+        include templates/head.pug
         script(defer, src='/scripts/populate_form.js')
     body
         include templates/header.pug
         aside
+            include templates/create_bird
             include templates/filter_form.pug
             include templates/status_legend.pug
         main
-            each bird in birds
+            each bird, index in birds
                 include templates/bird_card.pug
         include templates/footer.pug
