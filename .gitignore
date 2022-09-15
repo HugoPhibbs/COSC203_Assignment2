@@ -1,5 +1,6 @@
 .DS_Store
 ._*
 .env
+idea/
 
 node_modules/
