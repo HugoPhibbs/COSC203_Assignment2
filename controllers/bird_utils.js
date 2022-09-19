@@ -67,4 +67,4 @@ function bird_sort(birds, sort) {
     return birds.sort(sort_func);
 }
 
-module.exports = { bird_sort, search_string }
+module.exports = { bird_sort, search_string}

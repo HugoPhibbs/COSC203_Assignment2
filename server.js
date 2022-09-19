@@ -21,9 +21,9 @@ const options = {
 }
 
 mongoose.connect(dbUrl, options).then(() => {
-    console.log('successfully connected to db!')
+    console.log('Successfully connected to db!')
 }).catch((e) => {
-    console.error(e, 'could not connect not db!')
+    console.error(e, 'Could not connect not db!')
 });
 
 /* setup Express middleware */
@@ -36,8 +36,6 @@ app.set('view engine', 'pug');
 
 // Middleware for POSTs
 app.use(bodyParser.urlencoded({encoded: false}))
-
-// TODO: middleware for uploading files
 
 /* host static resources (.css, .js, ...) */
 app.use('/images/', image_router);

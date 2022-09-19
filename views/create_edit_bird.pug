@@ -4,50 +4,58 @@ html(lang="en")
         title #{title}
         meta(charset='utf-8')
         include templates/head.pug
+        script(defer src = "/scripts/preview.js")
     body
         include templates/header.pug
         aside
             include templates/return_home
         main(id="create-edit-main")
             h1 #{title}
-            form(action=`/birds/${editOrCreate}?=${index}`, method="POST" id="bird-detail-form")
+            form(action=`/birds/${editOrCreate}?=${index}`, method="POST" id="bird-detail-form" enctype = "multipart/form-data")
                 fieldset(class="bird-detail-fieldset")
                     h2 Common Names
                     label(for="primary-name") Primary Name
-                    input(id="primary-name" type="text" value=bird.primary_name name="primaryName")
+                    input(id="primary-name" type="text" value=bird.primary_name name="primaryName" required=true)
                     label(for="english-name") English Name
-                    input(id="english-name" type="text" value=bird.english_name name="englishName")
-                    // TODO bellow, change to a text box, not input, one other name per line
+                    input(id="english-name" type="text" value=bird.english_name name="englishName" required=true)
                     label(for="other-names") Other Names
-                    // TODO, add other names
-                    input(id="other-names" type="text" name="otherNames")
+                    textarea(id="other-names" name="otherNames" rows=10 cols=50) #{otherNames}
                 fieldset(class="bird-detail-fieldset")
                     h2 Taxonomy
                     label(for="scientific-name") Scientific Name
-                    input(id="scientific-name", type ="text" value=bird.scientific_name name='sciName')
+                    input(id="scientific-name", type ="text" value=bird.scientific_name name='sciName' required=true)
                     label(for="order") Order
-                    input(id="order", type ="text" value=bird.order name="order")
+                    input(id="order", type ="text" value=bird.order name="order" required=true)
                     label(for="family") Family
-                    input(id="family", type ="text" value=bird.family name="family")
+                    input(id="family", type ="text" value=bird.family name="family" required=true)
                 fieldset(class="bird-detail-fieldset")
                     h2 Size
                     label(for="length") Length (cm)
-                    input(id="length", type ="number" value=bird.size.length.value name="length")
+                    input(id="length", type ="number" value=bird.size.length.value name="length" required=true)
                     label(for="weight") Weight (g)
-                    input(id="weight", type ="number" value=bird.size.weight.value name="weight")
+                    input(id="weight", type ="number" value=bird.size.weight.value name="weight" required=true)
                 fieldset(class="bird-detail-fieldset")
                     h2 Conservation
                     label(for="cons-status") Conservation Status
-                    input(id="cons-status", type ="text" value=bird.status name="consStatus")
+                    select(id="cons-status" name="consStatus")
+                        option Not Threatened
+                        option Naturally Uncommon
+                        option Relict
+                        option Recovering
+                        option Declining
+                        option Nationally Increasing
+                        option Nationally Vulnerable
+                        option Nationally Endangered
+                        option Nationally Critical
+                        option Data Deficient
                 fieldset(class="bird-detail-fieldset")
                     h2 Photo Credit
                     label(for="photo-credit") Photo Credit
                     input(id="photo-credit", type="text" value=bird.photo.credit name="photoCredit")
-                    // TODO how to get method bellow??
-                    // TODO add photo input
-                    label(for="file") File
-                    input(id="file" type="file" name="file" value=bird.photo.source)
-                    // TODO fix photo input
-                    img(src= alt='bird-photo')
+                    label(for="bird-photo") File
+                    input(id="bird-photo" type="file" accept=".jpg" name = "birdPhoto")
+                    label(for="photo-preview") Preview
+                    img(src=`/images/${bird.photo.source}` alt='bird-photo' id='photo-preview')
+                    // TODO ability to change name of photo saved
                 button(type = "submit") Finish
         include templates/footer.pug

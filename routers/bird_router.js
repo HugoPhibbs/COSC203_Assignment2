@@ -2,8 +2,21 @@
 const router = require('express').Router();
 const controller = require("../controllers/bird_controller");
 const lodash = require("lodash")
-
 const Bird = require("../models/bird")
+const fs = require("node:fs");
+const EOS = require("node:os").EOL
+
+// Birds that are currently shown to a user, don't judge me for using pretty much global variables
+let birdsShown = undefined
+
+/* Setting up multer*/
+const multer = require("multer")
+const photoStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'tmp'),
+    filename: (req, file, cb) => cb(null, file.originalname)
+})
+const photoUpload = multer({storage: photoStorage})
+
 
 /**
  * Get Birds from DB
@@ -46,39 +59,41 @@ async function getBirdAtIndex(index) {
 }
 
 /**
- * Parses an HTTP POST request body for creating or editing a bird into a birdJSON
+ * Parses an HTTP POST request for creating or editing a bird into a birdJSON.
+ *
+ * Which is then to be inserted into a Mongo DB
+ *
+ * Ensures empty values or incorrect values are handled correctly
  *
  * @param body
+ * @param filename
  * @return birdJSON as described
  */
-function parseRequestToBird(body) {
+function parseRequestToBird(body, filename) {
     return {
         "primary_name": body.primaryName,
         "english_name": body.englishName,
         "scientific_name": body.sciName,
         "order": body.order,
         "family": body.family,
-        "other_names": [body.order],
+        "other_names": body.otherNames.split(EOL).map(s=>s.trim()),
         "status": body.consStatus,
         "photo": {
             "credit": body.photoCredit,
-            "source": 'ADD SOURCE' // TODO
+            "source": filename
         },
         "size": {
             "length": {
-                "value": parseInt(body.length),
+                "value": isNaN(parseInt(body.length)) ? undefined : parseInt(body.length),
                 "units": "cm"
             },
             "weight": {
-                "value": parseInt(body.length),
+                "value": isNaN(parseInt(body.weight)) ? undefined : parseInt(body.weight),
                 "units": "g"
             }
         }
     }
 }
-
-let birdsShown = undefined
-
 
 /* route the default URL: `/birds/ */
 router.get('/', async (req, res) => {
@@ -86,11 +101,8 @@ router.get('/', async (req, res) => {
     const search = req.query.search;
     const status = req.query.status;
     const sort = req.query.sort;
-
     birdsShown = await getBirds()
-
     birdsShown = controller.filter_bird_data(birdsShown, search, status, sort);
-
     res.render("home", {birds: birdsShown})
 })
 
@@ -98,75 +110,84 @@ router.get('/', async (req, res) => {
 router.get("/view", async (req, res) => {
     let index = req.query.index
     let chosenBird = await getBirdAtIndex(index)
-
     res.render("view_bird.pug", {
         bird: chosenBird, birdDisplay: "unique", index: index
     })
 })
 
-
-// TODO: finish the "Create" route(s)
 router.get('/create', (req, res) => {
     // currently does nothing except redirect to home page
     res.render('create_edit_bird.pug', {
         title: "Creating a bird",
         editOrCreate: "create",
+        otherNames: "",
         bird: {
-            "primary_name": "",
-            "english_name": "",
-            "scientific_name": "",
-            "order": "",
-            "family": "",
-            "other_names": [],
-            "status": "",
+            "primary_name": undefined,
+            "english_name": undefined,
+            "scientific_name": undefined,
+            "order": undefined,
+            "family": undefined,
+            "other_names": undefined,
+            "status": undefined,
             "photo": {
-                "credit": "",
-                "source": ""
+                "credit": undefined,
+                "source": undefined
             },
             "size": {
                 "length": {
                     "value": '',
-                    "units": ""
+                    "units": "cm"
                 },
                 "weight": {
-                    "value": '',
-                    "units": ""
+                    "value": undefined,
+                    "units": "g"
                 }
             }
         }
     })
 });
 
-router.post('/create', async (req, res) => {
-    // TODO handle splitting order into an array
-
-    // TODO handle adding an image,
-    const newBird = parseRequestToBird(req.body)
-
-    await Bird.create(newBird);
-
+router.post('/create', photoUpload.single("birdPhoto"), async (req, res) => {
+    let filename = req.file === undefined ? undefined : req.file.filename
+    let newBird = parseRequestToBird(req.body, filename)
+    await Bird.create(newBird)
+    if (req.file !== undefined) {
+        moveBirdPhoto(req.file, req.body.photoName)
+    }
     res.redirect("/birds/create")
 });
 
+/**
+ * Moves an uploaded bird photo from its temporary location to its permanent location
+ *
+ * @param file a POST request file object as per the multer API
+ * @param newFileName String for name of the new file, <b>JPG extension removed</b>
+ */
+function moveBirdPhoto(file, newFileName) {
+    fs.rename(file.path, `public/images/${file.originalname}`, (err) => {
+        if (err) throw err;
+        console.log("File successfully moved!");
+    })
+}
+
 router.get("/edit", async (req, res) => {
-
     let indexInt = parseInt(req.query.index)
-
     let birds = await getBirdsShown()
-
+    const chosenBird = birds[indexInt]
     res.render("create_edit_bird.pug", {
-        title: "Editing a bird", bird: birds[indexInt], editOrCreate: "edit"
+        title: "Editing a bird", bird: chosenBird, editOrCreate: "edit", otherNames:chosenBird.other_names.join(EOS)
     })
 })
 
-router.post("/edit", async (req, res) => {
+router.post("/edit", photoUpload.single("birdPhoto"), async (req, res) => {
     const index = req.query.index
     const chosenBird = await getBirdAtIndex(index);
-    const updatedBird = parseRequestToBird(req.body)
-
+    let filename = req.file.filename === undefined ? filename = chosenBird.photo.source : req.file.filename
+    const updatedBird = parseRequestToBird(req.body, filename)
     if (!lodash.isEqual(chosenBird, updatedBird)) {
         await Bird.updateOne(chosenBird, updatedBird)
     }
+    moveBirdPhoto(req.file)
     res.redirect("/")
 })
 
@@ -176,11 +197,5 @@ router.get('/delete', async (req, res) => {
     await Bird.deleteOne(chosenBird);
     res.redirect("/")
 })
-
-// TODO: get individual bird route(s)
-
-// TODO: Update bird route(s)
-
-// TODO: Delete bird route(s)
 
 module.exports = router; // export the router
