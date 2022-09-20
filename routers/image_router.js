@@ -12,7 +12,7 @@ router.get('/:filename?', (req, res) => {
 
     // if image doesn't exist, use a default image
     if (!fs.existsSync(image_path)) {
-        console.error(`Error image file not found: ${filename}`);
+        console.error(`Error image file not found: ${filename}, using default photo instead`);
         image_path = path.resolve(__dirname, '../public/images/default.jpg');
     }
 
