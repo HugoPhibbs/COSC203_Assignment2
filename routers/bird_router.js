@@ -4,7 +4,7 @@ const controller = require("../controllers/bird_controller");
 const lodash = require("lodash")
 const Bird = require("../models/bird")
 const fs = require("node:fs");
-const EOS = require("node:os").EOL
+const EOL = require("node:os").EOL
 
 // Birds that are currently shown to a user, don't judge me for using pretty much global variables
 let birdsShown = undefined
@@ -171,23 +171,25 @@ function moveBirdPhoto(file, newFileName) {
 }
 
 router.get("/edit", async (req, res) => {
-    let indexInt = parseInt(req.query.index)
+    let birdIndex = parseInt(req.query.index)
     let birds = await getBirdsShown()
-    const chosenBird = birds[indexInt]
+    const chosenBird = birds[birdIndex]
     res.render("create_edit_bird.pug", {
-        title: "Editing a bird", bird: chosenBird, editOrCreate: "edit", otherNames:chosenBird.other_names.join(EOS)
+        title: "Editing a bird", bird: chosenBird, editOrCreate: "edit", otherNames:chosenBird.other_names.join(EOL), index:birdIndex
     })
 })
 
 router.post("/edit", photoUpload.single("birdPhoto"), async (req, res) => {
     const index = req.query.index
     const chosenBird = await getBirdAtIndex(index);
-    let filename = req.file.filename === undefined ? filename = chosenBird.photo.source : req.file.filename
+    let filename = req.file === undefined ? chosenBird.photo.source : req.file.filename
     const updatedBird = parseRequestToBird(req.body, filename)
-    if (!lodash.isEqual(chosenBird, updatedBird)) {
+    if (!lodash.isEqual(chosenBird, updatedBird)) { // Check if need to update
         await Bird.updateOne(chosenBird, updatedBird)
     }
-    moveBirdPhoto(req.file)
+    if (req.file !== undefined) { // File may have not been changed
+        moveBirdPhoto(req.file)
+    }
     res.redirect("/")
 })
 
