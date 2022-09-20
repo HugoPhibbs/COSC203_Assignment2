@@ -1,1 +1,1 @@
-Intermittent directory for saving files
+Intermittent directory for saving files, don't delete
