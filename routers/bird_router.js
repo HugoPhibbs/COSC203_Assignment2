@@ -196,7 +196,11 @@ router.post("/edit", photoUpload.single("birdPhoto"), async (req, res) => {
 router.get('/delete', async (req, res) => {
     const index = req.query.index
     const chosenBird = await getBirdAtIndex(index)
-    await Bird.deleteOne(chosenBird);
+    await Bird.deleteOne({_id:chosenBird._id}).then(() => {
+        console.log("Bird successfully deleted")
+    }).catch(e => {
+        console.log(e)
+    });
     res.redirect("/")
 })
 
