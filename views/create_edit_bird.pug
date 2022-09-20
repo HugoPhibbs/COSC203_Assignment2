@@ -11,7 +11,7 @@ html(lang="en")
             include templates/return_home
         main(id="create-edit-main")
             h1 #{title}
-            form(action=`/birds/${editOrCreate}?=${index}`, method="POST" id="bird-detail-form" enctype = "multipart/form-data")
+            form(action=`/birds/${editOrCreate}?index=${index}`, method="POST" id="bird-detail-form" enctype = "multipart/form-data")
                 fieldset(class="bird-detail-fieldset")
                     h2 Common Names
                     label(for="primary-name") Primary Name
