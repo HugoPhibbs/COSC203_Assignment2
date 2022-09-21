@@ -3,14 +3,14 @@ const router = require('express').Router();
 const controller = require("../controllers/bird_controller");
 const lodash = require("lodash")
 const Bird = require("../models/bird")
-const fs = require("node:fs");
-const EOL = require("node:os").EOL
+const fs = require("fs");
+const EOL = require("os").EOL
+const multer = require("multer")
 
 // Birds that are currently shown to a user, don't judge me for using pretty much global variables
 let birdsShown = undefined
 
 /* Setting up multer*/
-const multer = require("multer")
 const photoStorage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'tmp'),
     filename: (req, file, cb) => cb(null, file.originalname)
