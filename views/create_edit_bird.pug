@@ -11,7 +11,7 @@ html(lang="en")
             include templates/return_home
         main(id="create-edit-main")
             h1 #{title}
-            form(action=`/birds/${editOrCreate}?index=${index}`, method="POST" id="bird-detail-form" enctype = "multipart/form-data")
+            form(action=`/birds/${editOrCreate}?id=${bird._id}`, method="POST" id="bird-detail-form" enctype = "multipart/form-data")
                 fieldset(class="bird-detail-fieldset")
                     h2 Common Names
                     label(for="primary-name") Primary Name
@@ -37,17 +37,9 @@ html(lang="en")
                 fieldset(class="bird-detail-fieldset")
                     h2 Conservation
                     label(for="cons-status") Conservation Status
-                    select(id="cons-status" name="consStatus")
-                        option Not Threatened
-                        option Naturally Uncommon
-                        option Relict
-                        option Recovering
-                        option Declining
-                        option Nationally Increasing
-                        option Nationally Vulnerable
-                        option Nationally Endangered
-                        option Nationally Critical
-                        option Data Deficient
+                    select(id="cons-status" name="consStatus" )
+                        each status in consStatuses
+                            option(selected=status===bird.status)=status
                 fieldset(class="bird-detail-fieldset")
                     h2 Photo Credit
                     label(for="photo-credit") Photo Credit
