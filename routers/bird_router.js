@@ -3,12 +3,22 @@ const router = require('express').Router();
 const controller = require("../controllers/bird_controller");
 const lodash = require("lodash")
 const Bird = require("../models/bird")
-const fs = require("fs");
+const fs = require("node:fs");
 const EOL = require("os").EOL
 const multer = require("multer")
 
-// Birds that are currently shown to a user, don't judge me for using pretty much global variables
-let birdsShown = undefined
+const consStatuses = [
+    "Not Threatened",
+    "Naturally Uncommon",
+    "Relict",
+    "Recovering",
+    "Declining",
+    "Nationally Increasing",
+    "Nationally Vulnerable",
+    "Nationally Endangered",
+    "Nationally Critical",
+    "Data Deficient"
+]
 
 /* Setting up multer*/
 const photoStorage = multer.diskStorage({
@@ -28,34 +38,13 @@ async function getBirds() {
 }
 
 /**
- * Gets the birds that are currently shown on a page
+ * Finds a bird with a given ID
  *
- * If none are shown, then it just finds all birds.
- *
- * This is done to implement selecting a bird, this is done via index.
- *
- * Makes sure that accessing birds/view?index=... doesn't break the site!
- *
- * Solution may be a bit flimsy, but it works.
- *
- * @returns {Promise<Query<Array<HydratedDocument<unknown, {}, {}>>, Document<unknown, any, unknown> & unknown extends {_id?: infer U} ? IfAny<U, {_id: Types.ObjectId}, Required<{_id: U}>> : {_id: Types.ObjectId}, {}, unknown>|undefined>}
+ * @param id mongoose id object
+ * @returns {Promise<void>}
  */
-async function getBirdsShown() {
-    if (birdsShown === undefined) {
-        return getBirds()
-    }
-    return birdsShown
-}
-
-/**
- * Gets a bird from the birds currently shown at a given index
- *
- * @param index
- * @returns {Promise<*>}
- */
-async function getBirdAtIndex(index) {
-    const birdsShown = await getBirdsShown()
-    return birdsShown[index]
+async function getBirdByById(id) {
+    return Bird.findById(id);
 }
 
 /**
@@ -70,13 +59,14 @@ async function getBirdAtIndex(index) {
  * @return birdJSON as described
  */
 function parseRequestToBird(body, filename) {
+    // TODO add id field
     return {
         "primary_name": body.primaryName,
         "english_name": body.englishName,
         "scientific_name": body.sciName,
         "order": body.order,
         "family": body.family,
-        "other_names": body.otherNames.split(EOL).map(s=>s.trim()),
+        "other_names": body.otherNames.split(EOL).map(s => s.trim()),
         "status": body.consStatus,
         "photo": {
             "credit": body.photoCredit,
@@ -101,17 +91,16 @@ router.get('/', async (req, res) => {
     const search = req.query.search;
     const status = req.query.status;
     const sort = req.query.sort;
-    birdsShown = await getBirds()
-    birdsShown = controller.filter_bird_data(birdsShown, search, status, sort);
-    res.render("home", {birds: birdsShown})
+    let birds = await getBirds()
+    birds = controller.filter_bird_data(birds, search, status, sort);
+    res.render("home", {birds: birds})
 })
 
-
 router.get("/view", async (req, res) => {
-    let index = req.query.index
-    let chosenBird = await getBirdAtIndex(index)
+    let id = req.query.id
+    let chosenBird = await getBirdByById(id)
     res.render("view_bird.pug", {
-        bird: chosenBird, birdDisplay: "unique", index: index
+        bird: chosenBird, birdDisplay: "unique"
     })
 })
 
@@ -143,7 +132,8 @@ router.get('/create', (req, res) => {
                     "units": "g"
                 }
             }
-        }
+        },
+        consStatuses: consStatuses
     })
 });
 
@@ -171,21 +161,26 @@ function moveBirdPhoto(file, newFileName) {
 }
 
 router.get("/edit", async (req, res) => {
-    let birdIndex = parseInt(req.query.index)
-    let birds = await getBirdsShown()
-    const chosenBird = birds[birdIndex]
+    let id = req.query.id
+    const chosenBird = await getBirdByById(id)
     res.render("create_edit_bird.pug", {
-        title: "Editing a bird", bird: chosenBird, editOrCreate: "edit", otherNames:chosenBird.other_names.join(EOL), index:birdIndex
+        title: "Editing a bird",
+        bird: chosenBird,
+        editOrCreate: "edit",
+        otherNames: chosenBird.other_names.join(EOL),
+        consStatuses: consStatuses
     })
 })
 
 router.post("/edit", photoUpload.single("birdPhoto"), async (req, res) => {
-    const index = req.query.index
-    const chosenBird = await getBirdAtIndex(index);
+    const id = req.query.id
+    const chosenBird = await getBirdByById(id);
     let filename = req.file === undefined ? chosenBird.photo.source : req.file.filename
     const updatedBird = parseRequestToBird(req.body, filename)
     if (!lodash.isEqual(chosenBird, updatedBird)) { // Check if need to update
-        await Bird.updateOne(chosenBird, updatedBird)
+        await Bird.updateOne({_id:id}, updatedBird)
+        console.log(updatedBird)
+        getBirds().then(res => {console.log(res)})
     }
     if (req.file !== undefined) { // File may have not been changed
         moveBirdPhoto(req.file)
@@ -194,9 +189,9 @@ router.post("/edit", photoUpload.single("birdPhoto"), async (req, res) => {
 })
 
 router.get('/delete', async (req, res) => {
-    const index = req.query.index
-    const chosenBird = await getBirdAtIndex(index)
-    await Bird.deleteOne({_id:chosenBird._id}).then(() => {
+    const id = req.query.id
+    const chosenBird = await getBirdByById(id)
+    await Bird.deleteOne({_id: id}).then(() => {
         console.log("Bird successfully deleted")
     }).catch(e => {
         console.log(e)
