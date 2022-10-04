@@ -3,7 +3,7 @@ const router = require('express').Router();
 const controller = require("../controllers/bird_controller");
 const lodash = require("lodash")
 const Bird = require("../models/bird")
-const fs = require("node:fs");
+const fs = require("fs");
 const EOL = require("os").EOL
 const multer = require("multer")
 
